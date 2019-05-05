@@ -1,32 +1,47 @@
-# Real time estimation and visualisation of road terrain
+#				Automotive Research and Analysis 
+##		Method and Apparatus to analyzing Road Quality
 
-## Problem Analysis
-### Motivation
-Web mapping services like Google Maps display an immense amount of information like the best route between two points at any given time, real time updates of the traffic on a route, elevation etc.
+## Background
 
-However, they do not convey any information about the terrain of the route.  Following are the reasons why solving this problem is important:
+Maps have become significant part of our day to day lives. It is the best friend while driving and also when someone wants to find the way to any desitination. Google maps, Street views and also a lot of other advancements are happening as we speak. 
 
-- Terrain characteristics of a road like potholes, gravel road, speed bumps are very essential for a driver. Even more important is the fact that the driver needs to know this information in real-time. For example, if a car is travelling above speed limit, and there is a speed bump 300 meters ahead, then it is very critical for the driver to know this as soon as possible lest it might lead to a catastrophe.
-- It can be used to monitor the wear and tear of wheels. It can also detect and report any possible vehicular breakdowns in advance. 
+Maps provides us the options like 
+1) Search for a destination and select the paths (generally the shortest)
+2) Change the path dynamically based on say, traffic or late traffic indications
+3) Provides us an ETA based on instantaneous traffic load and path selected
+4) Others
 
-### Description
-Real time estimation and visualisation of road terrain on web based map services like Google Maps.
+This is all based on the data avaialble at the given time on the servers, and also due to the maps uploading the information from User's phone to the servers. The data is from the phones, and if the user dont use phones, there is no way to understand the live data. 
 
-## Approach
-In this project, we have designed a system that collects terrain information of the roads using the sensors present in vehicles and stores it in a central database in real time. This information can then be visualised on a web-based map application like Google Maps to get the current terrain status of a route.
+**But what maps doesnt provide us today is the road condition - as in, it doesnt let us select the road based on road conditions- and this is the basis of the current literature** 
 
-This is a data-driven approach in the sense that more the data we collect from the vehicles on road higher will be the accuracy with which we can project terrain information on the map application. 
 
-## Implementation
-<img src = "https://github.com/thedatamonk/RTOS-Project/blob/master/images/system_architecture.png">
+## Problem Statement 
 
-In our setup, we have used 2 RPi each fitted with an accelerometer sensor. One of them is also fitted with a GPS sensor to collect the current location of the vehicle. These RPis are attached to either end (front and rear) of the vehicle. The one with the GPS is attached in the front end of the vehicle. 
+Maps dont provide us the following option and that becomes our **"Problems to Solve"**
 
-We also designed a setup that used 4 RPis each with one accelerometer and fitted on each tyre.The GPS sensor in this setting is present in the center of the vehicle.This setup we believe will not only give more precise location of the potholes and speed bumps but also would give a decent estimate of the shape and size of the potholes. However, in this project we have only implemented the setup with 2 RPis and leave the second setup for future work.  
+- [X] *Road conditions (like the bumps,holes,roads torn due to repairs)*
+- [X] *Reason for the Jams: If there is a jam because of bad road(s) / due to repair work/ say some vehicle Stranded*
+- [X] *It cant give information regarding say the engine vibrations* 
+- [X] *Also it cant give information regarding say, the tyre's abnormality due to long usage*
+- [X] *Analytics over localized data (and would be more accurate)*
+  - *Automatic feeding of the data by several vehicles into dynamic database(to be updated by each passing vehicle)*
+  - *Future usage of this data by other vehicles, who have chosen this path*
+  
 
-We have used the concepts of socket programming to read data from sensors and send it to the database. The polling of sensors is done every 1 second. In other words, the sensor data is send and stored in the database every 1 second. After having sufficient data, we wrote code to query the data from the database and visualise it on the different plots.
+## Implementation Details 
 
-## Tools and technologies
+The proposal here is divided into the following Functional details  
+1) Attach Accelerometers to the moving parts of the vehicle (front engine/wheels and/or rear wheels)
+2) Attach a GPS Module to the vehicle ideally towards one center of the vehicle
+3) Create a local IP Network between these devices and the end router with NW Upload capability
+
+The configuration of the devices are as below => 
+<img src = https://github.com/GitBps/AutomotiveResearch/blob/master/SensorGPSProject/Snapshots/OverallFunctionalDiagram.png >
+
+Here the data collection source is not the Mobile Phone but the real Sensors connected to the User's vehicle.Data collection at source is REALTIME and once accurately available, it is used offline by all users without even participating in the overall collection. In that way it is a first hand information available directly from the hardware sources.
+
+## Tools and technologies used
 
 ### Hardware tools
 
@@ -40,20 +55,164 @@ We have used the concepts of socket programming to read data from sensors and se
 
 **GPS module**: GPS module is used to detect the Latitude and Longitude of any location with exact time. It sends data related to tracking position in real time in NMEA format.
 
-
 ### Software tools
 
-**InfluxDB**: It is an open source database optimized for fast, high-availability storage and retrieval of time series data. In our case, all the sensor data is stored in InfluxDB in real time. ***...--->(Please clarify this: in the cloud? Or PC?)***
+**InfluxDB**: It is an open source database optimized for fast, high-availability storage and retrieval of time series data. In our case, all the sensor data is stored in InfluxDB in real time.
 
 **Grafana Labs**: It is an analytics tool that allows to query, visualize and understand any metrics from the stored data. In our case, we used Grafana to plot the time-series data and the geolocation of the anomalies in time-series data from InfluxDB in the inbuilt mapping tool for visualization.
 
-## Issues
-- System is not completely real time in the sense that a driver may not get terrain information immediately when an anomaly is encountered.
-- Speed of vehicles should not very high else we won’t be able to poll the sensor data correctly.
-- More the number of sensor, more difficult it is to sync data from all of them.***Please clarify if this point is valid or not***
 
-## Conclusion and future work
-In this project, we designed and implemented a working prototype of a system that can collect terrain data from the sensors fitted in the vehicle and store it in cloud in real-time. We also wrote scripts to read this data from **InfluxDB** and pre-processed it before visualising the potholes/speedbumps locations in **Grafana**.
+## Basic Setup and Working Details (How it is implemented)
 
-As a part of our future work, we aim to make the visualisation component also real-time. We also aim to build systems with more sensors and compare their performance with that of our current system. 
+a) **ACCELEROMETER:** As seen in the previous sections, there are sensor data which will be typically a short string format of 30 odd bytes and is coming at a frequency of every **500ms**. 
+
+- This looks something like this for each sensor **<SensorId = Id, X = x, Y = y, Z = z>**
+- For each sensor ID the data would be the **absolute** displacement of the **X, Y, Z** coordintes.
+- We prepend the sendor id to the coordinates so that we can distinguish the data came from which Sensor.
+
+**Sensor data would not be plotted as it is, but rather be plotted only after Callibration and the time we updated the last coordinate**. This is explained in the **Callibration section** below
+
+b) **GPGGA GPS LOCATION FIX:** There is also a GPS Data coming to the Sensor Device every **1 second** and it contains atleast 9-10 strings carrying the following data strings 
+
+ - $GPRMC,134809.00,A,1254.29859,N,07738.82074,E,0.178,,300419,,,A*79
+ - $GPVTG,,T,,M,0.178,N,0.330,K,A*2D
+ - $GPGGA,134809.00,1254.29859,N,07738.82074,E,1,03,2.94,940.5,M,-86.6,M,,*75**
+ - $GPGSA,A,2,12,05,25,,,,,,,,,,3.11,2.94,1.00*0F
+ - $GPGSV,3,1,11,02,28,029,16,05,63,034,39,06,01,056,17,12,74,245,25*74
+ - $GPGSV,3,2,11,13,24,138,,15,23,176,18,19,12,105,08,21,05,268,*77
+ - $GPGSV,3,3,11,24,15,205,09,25,44,306,19,29,19,329,*44
+ - $GPGLL,1254.29859,N,07738.82074,E,134809.00,A,A*61
+
+Each string has its own significance. But for the location details we need to parse the Latitude and Longitudes and convert them into the exact geolocations with negative and positive directions into considerations from the **GPGGA** String which comes in every Second. 
+
+**GPGGA** string is parsed as shown in the below diagram for the details before handing that over to the Database and Grafanna for viewing.
+
+<img src = https://github.com/GitBps/AutomotiveResearch/blob/master/SensorGPSProject/Snapshots/FunctionalBlock2.png >
+
+
+## Challenge: Synchronization between various Nodes and GPS Module
+
+Lets look at the proposals below to see the problem statement.
+
+- **Proposal 1:** All devices publish their **data strings** directly to the **cloud**
+  - **PROS:**
+    - Easy design, easy implementation 
+    - No dependency on any central device to collect, process, and publish
+  - **CONS:**
+    - No Synchronization of the frames, and @Database, frames would reach out of time
+    - Lack of serialization
+    - Network Delays could cause further issues, of wrong packets etc.
+
+<img src = https://github.com/GitBps/AutomotiveResearch/blob/master/SensorGPSProject/Snapshots/LayoutProposal_1.png >
+
+Proposal 1 looks easier but has serious drawbacks in terms of impact of data being plotted. 
+
+
+- **Proposal 2:** Since all sensors have an IP, and the **Central Service** module is one which has Cloud connectivity it can manage much better all the data packets arriving from all sensors.
+  - **PROS:**
+    - Data fully Serialized 
+    - Data processed more in the real time, Neglecting the Network Latencies.
+    - Network Latencies can now be **DETECTED** (Proposal below) and out of time frames to be dropped to avoid wrong data
+    - Latencies can be corrected before sending to the DB
+    - A **Correction baed on time synchronization** Method is proposed below, and is **under implementation**
+      (proposed in next section)
+  - **CONS:** 
+    - Central server needs to process all packets quite fast.
+    - Measures to avoid Data corruption need be applied.
+
+Proposal 2 looks promising as seen from the implementation perspective. This is the chosen implementation.
+
+## Acclerometer/GPS Data Callibration and Filtering
+
+- In general as seen in the setup the Accelerometer in discussion is a sensitive device and hence would generally **flood the database** if not filtered properly.
+- Also noticed that during an upjerk or a downjerk, there would be multiple **INTERRUPTs from I2C** since the UP-DOWN cycle may take more than 500ms or sometimes even a second, **depending on the speed of the vehicle**
+- GPS Sensor must show a dot on the map only if the such interrupt (as seen above) could be distintly counted and a sense of **time delta** from the last GPS Projection is done.
+
+following is the flow, for both sensor and GPS to apply **Decided FILTERS**
+<img src = https://github.com/GitBps/AutomotiveResearch/blob/master/SensorGPSProject/Snapshots/FlowChartFineTuning.png>
+
+## Working Screenshots and DEMO
+
+### S1 data + S2 Data + GPGGA Processed by Central Server
+
+- Central server processing the data as received from the 2 sensors and the GPS Module.
+- It does the **calibration and filters out** the measurements and then sends out the packet to influx
+
+As seen in below image, this is a very fine tuned and callibrated details of sensor movements.
+the Collector does a fair job in collecting published data, filters, and processes if filter criteria is met.
+
+**Again Filter Criteria is subject to change based on how sensitive the Accelerometer data is requested**
+
+<img src = https://github.com/GitBps/AutomotiveResearch/blob/master/SensorGPSProject/Snapshots/S1_S2_GPGGA.png >
+
+
+### S1/S2 Moves, GPS criteria met, then its plotted.
+
+1) Data coming from only 3 sensors 
+
+The below is data from only sensors, plotted against the Influx timeline. this is plotted on real time as this arrives and meets the filter criteria. 
+
+<img src = https://github.com/GitBps/AutomotiveResearch/blob/master/SensorGPSProject/Snapshots/OnlySensors.png>
+
+
+2) Real time data from slow moving device in a small area to check for the accuracy of data in small intervals and with small population using this technology. 
+
+**Data was accurately Published**
+
+<img src = https://github.com/GitBps/AutomotiveResearch/blob/master/SensorGPSProject/Snapshots/integratedRealtime1.png >
+
+
+3) When multiple users start to use this technique, then the data available would be much more consistent with reality. 
+More over, as seen below the data is last 12 hrs of movement of device in places, and monitored several jerks at the locations plotted. 
+As and when these locations are filled or repared, they would start to disappear
+And data would be good for some of the **Future** users in time.
+
+<img src = https://github.com/GitBps/AutomotiveResearch/blob/master/SensorGPSProject/Snapshots/PlotsLast12Hrs_1.png >
+
+Another example of moving vehicle hitting 2+ disturbed areas and detected and plotted.
+<img src =  https://github.com/GitBps/AutomotiveResearch/blob/master/SensorGPSProject/Snapshots/2Mapdots.png >
+
+### Pulling Data from History 
+
+Grafana has an inbuilt support for Influx connections, and due to that the committed data can be pulled back and plotted anytime. Data as old as 5 years could also be plotted. 
+
+See below the configuration settings from Grafana
+
+<img src = https://github.com/GitBps/AutomotiveResearch/blob/master/SensorGPSProject/Snapshots/GrafanaRefreshOption.png >
+
+### FreeRunning Accelerometers - For Vehicle Health Detection
+
+- This experiment could also be used to detect the health of the running vehicle - due to extra amounts of **Vibrations** from either the engine or the wheels. 
+- Having known the baseline data, that the roads are good at a given location say in the given plots, then it can be clearly figured out that there is some wearing in the engine. 
+- Moreover the data can be compared with historical data from same locations, to evaluate if there is a **degradation**
+
+<img src = https://github.com/GitBps/AutomotiveResearch/blob/master/SensorGPSProject/Snapshots/FreeRunningWheelOrVibrationDetected.png>
+
+
+## Detection & Correction Proposal for Network Latencies
+
+**Problem Statement:** As explained in previous sections, since there are more than 5 differnet sensors here, who are all connected to the IP network and are pumping data strings every 500ms and 1 second respectively. 
+
+On top of that there are network latencies and there are high amount of chances that if one of the network is delayed, data received would loose its real-timeliness and then be going wrongly.
+
+
+The above collection of data is sent out every second (**almost accurately**) and reaches the **Central Controller** with some network and processing latency. 
+
+**Considering the GPS Clocks coming as PPS every second (Measured accurately), we are planning to use it as a SYNCHRONIZATION MECHANISM for any out of time packets at the central service. **
+
+
+**TODO: MSC FLOW TO BE EXPLAINED ON BOARD**
+
+## Known Limitations and Remaining Tasks
+
+- Mostly Realtime, Latencies not seen > 15-20 ms with 2-3 sensors and GPS with FIX.
+- Network Latency could make things stale , things in above section to be implemented
+- Influx query to be deviced for getting the counter value of number of hits by several users at a given GEO location so that it could be marked bad or good automatically based on the co-relation with latest data.
+- Emulated S4 here - but even after emulation it was working fine. - to be tried with all 4 sensors- it may not really help though to that extent but still to complete
+
+
+#			End of the document
+
+
+
 
