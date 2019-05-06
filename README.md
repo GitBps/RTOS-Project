@@ -76,7 +76,7 @@ b) **GPGGA GPS LOCATION FIX:** There is also a GPS Data coming to the Sensor Dev
 
  - $GPRMC,134809.00,A,1254.29859,N,07738.82074,E,0.178,,300419,,,A*79
  - $GPVTG,,T,,M,0.178,N,0.330,K,A*2D
- - $GPGGA,134809.00,1254.29859,N,07738.82074,E,1,03,2.94,940.5,M,-86.6,M,,*75**
+ - $GPGGA,134809.00,1254.29859,N,07738.82074,E,1,03,2.94,940.5,M,-86.6,M,,*75
  - $GPGSA,A,2,12,05,25,,,,,,,,,,3.11,2.94,1.00*0F
  - $GPGSV,3,1,11,02,28,029,16,05,63,034,39,06,01,056,17,12,74,245,25*74
  - $GPGSV,3,2,11,13,24,138,,15,23,176,18,19,12,105,08,21,05,268,*77
@@ -208,11 +208,24 @@ The above collection of data is sent out every second (**almost accurately**) an
 - Mostly Realtime, Latencies not seen > 15-20 ms with 2-3 sensors and GPS with FIX.
 - Network Latency could make things stale , things in above section to be implemented
 - Influx query to be deviced for getting the counter value of number of hits by several users at a given GEO location so that it could be marked bad or good automatically based on the co-relation with latest data.
-- Emulated S4 here - but even after emulation it was working fine. - to be tried with all 4 sensors- it may not really help though to that extent but still to complete
+- **There is provision to add many more sensors this logic and many more use cases to be enabled with this as base** 
+
+## GIT Path to Source Code and Snapshots
+
+Full Source of Sensors, GPS, Central Server, Influx and Grafana details 
+<img src = https://github.com/GitBps/AutomotiveResearch >
+
+Grafana Hosted Dashboard 
+<img src = https://grafanasnap.grafana.net/d/s401nZiZk/balvinder_plotted_finally?orgId=1&from=now-12h&to=now >
+
+Influx + Python Programming Link
+<img src = https://www.influxdata.com/blog/getting-started-python-influxdb/ >
+
+Grafana Worldmap Panel
+<img src = https://github.com/grafana/worldmap-panel>
 
 
 #			End of the document
-
 
 
 
